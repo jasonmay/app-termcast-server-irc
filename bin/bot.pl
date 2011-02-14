@@ -5,28 +5,30 @@ use IM::Engine;
 use AE;
 use AnyEvent::Socket;
 use AnyEvent::Handle;
+use Cwd;
 use YAML qw(LoadFile);
 
 die "Arg (unix socket path) required" unless @ARGV;
 
 
 my $host = 'http://jarsonmar.org:5000/';
-my $config = LoadFile('etc/config.yml');
+#my $config = LoadFile('etc/config.yml');
+>>>>>>> use unix socket
 
 my $engine = IM::Engine->new(
     interface => {
         protocol => 'IRC',
         credentials => {
-            server   => "irc.cplug.net",
+            server   => "verne.freenode.net",
             port     => 6667,
-            channels => ["#bot"],
+            channels => ["##netmonster"],
             nick     => "TCbot",
         },
     },
 );
 
 my $h;
-my $socket = tcp_connect 'unix/', $ARGV[0], sub {
+my $socket = tcp_connect 'unix/', Cwd::abs_path($ARGV[0]), sub {
     warn "connected";
     my $fh = shift;
     $h = AnyEvent::Handle->new(
