@@ -13,7 +13,6 @@ die "Arg (unix socket path) required" unless @ARGV;
 
 my $host = 'http://jarsonmar.org:5000/';
 #my $config = LoadFile('etc/config.yml');
->>>>>>> use unix socket
 
 my $engine = IM::Engine->new(
     interface => {
