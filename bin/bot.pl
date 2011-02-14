@@ -10,7 +10,7 @@ use YAML qw(LoadFile);
 die "Arg (unix socket path) required" unless @ARGV;
 
 
-my $host = 'jarsonmar.org';
+my $host = 'http://jarsonmar.org:5000/';
 my $config = LoadFile('etc/config.yml');
 
 my $engine = IM::Engine->new(
