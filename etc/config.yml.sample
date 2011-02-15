@@ -1,0 +1,8 @@
+---
+credentials:
+  channels:
+    - '#bot'
+  nick: TCbot
+  port: 6667
+  server: irc.server.net
+protocol: IRC
