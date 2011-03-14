@@ -9,3 +9,5 @@ die "Arg (socket path) required" if !@ARGV;
 my $socket = Cwd::abs_path($ARGV[0]);
 
 my $engine = App::Termcast::Server::IRC->new(socket => $socket);
+
+$engine->run();

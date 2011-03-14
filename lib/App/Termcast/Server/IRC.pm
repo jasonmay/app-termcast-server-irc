@@ -4,23 +4,24 @@ use AnyEvent::Socket;
 use IM::Engine;
 use IM::Engine::Outgoing::IRC::Channel;
 use YAML;
+use Cwd;
 
 has config => (
-    is => 'ro',
-    isa => 'IM::Engine',
-    lazy => 1,
+    is      => 'ro',
+    isa     => 'HashRef',
+    lazy    => 1,
     builder => '_build_config',
 );
 
-sub _build_conig {
+sub _build_config {
     my $self = shift;
-    YAML::load_file('etc/config.yml');
+    YAML::LoadFile('etc/config.yml');
 }
 
 has engine => (
-    is => 'ro',
-    isa => 'IM::Engine',
-    lazy => 1,
+    is      => 'ro',
+    isa     => 'IM::Engine',
+    lazy    => 1,
     builder => '_build_engine',
 );
 
@@ -40,26 +41,34 @@ has socket => (
     required => 1,
 );
 
+has termcast_handle => (
+    is  => 'rw',
+    isa => 'AnyEvent::Handle',
+);
+
 sub _start_termcast_checker {
     my $self = shift;
-    tcp_connect 'unix/', $self->socket, sub {
-        my $fh = shift;
+    tcp_connect 'unix/', Cwd::abs_path($self->socket), sub {
+        my $fh = shift or die $!;
         $self->_tcp_connect($fh);
     };
 }
 
 sub _tcp_connect {
+    my $self = shift;
     my $fh = shift;
 
     my $h = AnyEvent::Handle->new(
         fh => $fh,
         on_read => sub { $self->_read_event(@_) },
     );
+
+    $self->termcast_handle($h);
 }
 
 sub _read_event {
     my $self = shift;
-    my ($h) = @_,
+    my ($h) = @_;
 
     $h->push_read(
         json => sub { $self->_handle_tc_data(@_); }
@@ -72,7 +81,7 @@ sub _handle_tc_data {
 
     if ($data->{notice} eq 'connect') {
         foreach my $channel (@{ $self->config->{credentials}->{channels} }) {
-            $self->respond($channel, $data);
+            $self->_respond($channel, $data);
         }
     }
 }
@@ -83,16 +92,16 @@ sub _respond {
     my $channel = IM::Engine::Outgoing::IRC::Channel->new(
         channel => $channel_name,
         message => sprintf(
-            q[%s started termcasting on (TODO: url)],
-            $data->{connection}{user},
+            q[%s started termcasting: http://%s/tv/%s],
+            $data->{connection}{user}, 'jarsonmar.org:5000', $data->{connection}{session_id},
         ),
     );
-    $engine->send_message($channel);
+    $self->engine->send_message($channel);
 }
 
 sub run {
     my $self = shift;
-    $self->start_termcast_checker();
+    $self->_start_termcast_checker();
     $self->engine->run(@_)
 }
 
